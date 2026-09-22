@@ -1,7 +1,7 @@
 // auth.js  (project root)
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { connectDB } from "@/lib/mongodb";
+import { connectDB } from "@/lib/connectDB";
 import { User } from "@/models/User";
 
 export const authOptions = {
