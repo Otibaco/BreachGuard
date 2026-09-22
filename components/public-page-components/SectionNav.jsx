@@ -30,22 +30,22 @@ export default function SectionNav({ items }) {
   }, [items]);
 
   return (
-    <div className="sticky top-16 z-30 border-b border-border-subtle bg-bg-canvas/95 backdrop-blur-md">
+    <div className="sticky top-[72px] z-30 border-b border-border-subtle bg-bg-canvas/90 backdrop-blur-xl">
       <nav
         aria-label="On this page"
-        className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="mx-auto max-w-6xl overflow-x-auto px-3 py-2.5 sm:px-6 lg:px-8 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        <ul className="flex items-center gap-1 py-3 text-sm whitespace-nowrap">
+        <ul className="flex min-w-max items-center gap-2 text-sm whitespace-nowrap">
           {items.map((item) => {
             const active = item.id === activeId;
             return (
               <li key={item.id}>
                 <a
                   href={`#${item.id}`}
-                  className={`inline-block rounded-full px-3.5 py-1.5 transition-colors ${
+                  className={`flex items-center rounded-full border px-3 py-2 text-[11px] font-medium tracking-[0.08em] uppercase transition-all duration-200 sm:px-3.5 sm:text-xs ${
                     active
-                      ? "bg-brand-primary/15 text-brand-cyan font-medium"
-                      : "text-text-muted hover:text-text-secondary"
+                      ? "border-brand-primary/30 bg-brand-primary/12 text-brand-cyan shadow-[0_0_18px_rgba(56,189,248,0.15)]"
+                      : "border-white/5 bg-white/[0.02] text-text-muted hover:border-white/10 hover:bg-white/[0.04] hover:text-text-secondary"
                   }`}
                 >
                   {item.label}

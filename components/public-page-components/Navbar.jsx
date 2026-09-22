@@ -80,9 +80,9 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full px-3 pt-3 sm:px-4 lg:px-6">
+    <header className="sticky top-0 z-50 w-full px-3 pb-2 pt-3 sm:px-4 lg:px-6">
       <div className="mx-auto max-w-7xl">
-        <div className="flex items-center justify-between rounded-full border border-white/10 bg-bg-canvas/70 px-3 py-2 shadow-[0_18px_50px_rgba(8,15,28,0.36)] backdrop-blur-xl ring-1 ring-white/5 sm:px-4">
+        <div className="flex items-center justify-between rounded-full border border-white/10 bg-bg-canvas/75 px-3 py-2 shadow-[0_18px_50px_rgba(8,15,28,0.36)] backdrop-blur-xl ring-1 ring-white/5 sm:px-4">
           <Link
             href="/"
             className="flex items-center gap-2.5 rounded-full text-text-secondary transition-colors hover:text-text-primary"

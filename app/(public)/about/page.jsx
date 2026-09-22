@@ -70,7 +70,7 @@ const PRIVACY_PRINCIPLES = [
 ];
 
 const TECH_STACK = [
-  { term: "Frontend", value: "Next.js App Router, JavaScript, Tailwind CSS" },
+  { term: "Frontend", value: "Next.js App Router, TypeScript, Tailwind CSS" },
   { term: "Backend", value: "Next.js server-side functionality, controllers, services, and route handlers" },
   { term: "Database", value: "MongoDB with Mongoose" },
   { term: "Security", value: "bcrypt, authentication middleware, server-side validation, rate limiting" },
