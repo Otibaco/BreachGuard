@@ -9,9 +9,10 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ChecksPage({ searchParams }) {
-  const page = Number(searchParams?.page) || 1;
-  const status = searchParams?.status === "breached" || searchParams?.status === "clean"
-    ? searchParams.status
+  const params = await searchParams;
+  const page = Number(params?.page) || 1;
+  const status = params?.status === "breached" || params?.status === "clean"
+    ? params.status
     : undefined;
 
   const [{ checks, pagination }, statistics] = await Promise.all([

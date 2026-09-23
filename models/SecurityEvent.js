@@ -8,6 +8,7 @@ const SecurityEventSchema = new mongoose.Schema(
         "failed_admin_login",
         "rate_limit_exceeded",
         "invalid_breach_request",
+        "breach_api_error",
       ],
       required: true,
     },

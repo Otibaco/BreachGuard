@@ -9,7 +9,8 @@ export const metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function SecurityEventsPage({ searchParams }) {
-  const page = Number(searchParams?.page) || 1;
+  const params = await searchParams;
+  const page = Number(params?.page) || 1;
   const { events, pagination } = await getSecurityEvents({ page, limit: 25 });
 
   return (

@@ -39,6 +39,35 @@ function isConfigured() {
   return Boolean(process.env.BREACH_API_URL);
 }
 
+function isValidProviderUrl(url) {
+  if (!url) return false;
+
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    const protocol = parsed.protocol.toLowerCase();
+
+    if (!["http:", "https:"].includes(protocol)) {
+      return false;
+    }
+
+    const validHosts = [
+      /^(?:api\.)?xposedornot\.com$/,
+      /^(?:api\.)?haveibeenpwned\.com$/,
+      /^(?:api\.)?pwnedpasswords\.com$/,
+      /^(?:api\.)?hibp\.com$/,
+      /^(?:.*\.)?xposedornot\.com$/,
+      /^(?:.*\.)?haveibeenpwned\.com$/,
+      /^(?:.*\.)?pwnedpasswords\.com$/,
+      /^(?:.*\.)?hibp\.com$/,
+    ];
+
+    return validHosts.some((pattern) => pattern.test(host));
+  } catch {
+    return false;
+  }
+}
+
 function isXposedOrNotUrl(url) {
   if (!url) return false;
   return /xposedornot\.com|api\.xposedornot\.com/i.test(url);
@@ -160,6 +189,13 @@ function mapProviderResponseToInternalShape(providerResponse) {
 export async function checkEmailAgainstBreachApi(normalizedEmail) {
   if (!isConfigured()) {
     throw new BreachApiNotConfiguredError();
+  }
+
+  if (!isValidProviderUrl(process.env.BREACH_API_URL)) {
+    throw new BreachApiError("The configured breach API URL is invalid.", {
+      status: 400,
+      code: "BREACH_API_INVALID_URL",
+    });
   }
 
   const providerUrl = buildProviderUrl(normalizedEmail);

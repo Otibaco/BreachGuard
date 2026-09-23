@@ -32,27 +32,29 @@ export default function ChecksTable({ checks, pagination, currentStatus, counts 
         actions={<RefreshButton />}
       />
 
-      <div className="flex items-center gap-1 mb-5 border-b border-border-subtle">
-        {TABS.map((tab) => {
-          const active = tab.key === activeKey;
-          const count =
-            tab.key === "all" ? counts.total : tab.key === "breached" ? counts.breached : counts.clean;
-          const href = tab.status ? `/control-center/checks?status=${tab.status}` : "/control-center/checks";
+      <div className="mb-5 overflow-x-auto border-b border-border-subtle">
+        <div className="flex min-w-max items-center gap-1 pb-1">
+          {TABS.map((tab) => {
+            const active = tab.key === activeKey;
+            const count =
+              tab.key === "all" ? counts.total : tab.key === "breached" ? counts.breached : counts.clean;
+            const href = tab.status ? `/control-center/checks?status=${tab.status}` : "/control-center/checks";
 
-          return (
-            <Link
-              key={tab.key}
-              href={href}
-              className={`px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
-                active
-                  ? "border-brand-cyan text-brand-cyan"
-                  : "border-transparent text-text-muted hover:text-text-secondary"
-              }`}
-            >
-              {tab.label} <span className="text-text-dim font-mono text-xs">({count})</span>
-            </Link>
-          );
-        })}
+            return (
+              <Link
+                key={tab.key}
+                href={href}
+                className={`whitespace-nowrap border-b-2 px-3 py-2.5 text-sm font-medium transition-colors sm:px-4 ${
+                  active
+                    ? "border-brand-cyan text-brand-cyan"
+                    : "border-transparent text-text-muted hover:text-text-secondary"
+                }`}
+              >
+                {tab.label} <span className="font-mono text-[10px] text-text-dim sm:text-xs">({count})</span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-2xl border border-border-subtle bg-bg-card">

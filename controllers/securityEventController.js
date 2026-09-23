@@ -14,6 +14,16 @@ export async function logSecurityEvent({ type, ipHash, metadata = {} }) {
   }
 }
 
+export async function getSecurityEventCountSince(hours = 24) {
+  try {
+    await connectToDatabase();
+    const since = new Date(Date.now() - hours * 60 * 60 * 1000);
+    return await SecurityEvent.countDocuments({ createdAt: { $gte: since } });
+  } catch {
+    return 0;
+  }
+}
+
 export async function getSecurityEvents({ page = 1, limit = 25 } = {}) {
   try {
     await connectToDatabase();

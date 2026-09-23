@@ -1,9 +1,11 @@
-import Credentials from 'next-auth/providers/credentials'
-import bcrypt from 'bcryptjs'
-import { connectDB } from '@/lib/connectDB'
-import { User } from "./models/User";
+import Credentials from 'next-auth/providers/credentials';
+import bcrypt from 'bcryptjs';
+import { connectDB } from '@/lib/connectDB';
+import { User } from '@/models/User';
+import { getClientIp, hashValue, normalizeEmail } from '@/lib/utils';
+import { logSecurityEvent } from '@/controllers/securityEventController';
 
-export const authOptions = {  
+export const authOptions = {
   providers: [
     Credentials({
       name: 'Credentials',
@@ -11,41 +13,66 @@ export const authOptions = {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null
+      async authorize(credentials, req) {
+        const email = normalizeEmail(credentials?.email ?? '');
+        const password = String(credentials?.password ?? '');
+        const ipHash = hashValue(getClientIp(req?.headers ?? {}));
 
-        await connectDB()
-        const user = await User.findOne({ email: credentials.email }).select('+password')
-        if (!user) return null
+        if (!email || !password) {
+          await logSecurityEvent({
+            type: 'failed_admin_login',
+            ipHash,
+            metadata: { reason: 'missing_credentials' },
+          });
+          return null;
+        }
 
-        const valid = await bcrypt.compare(credentials.password, user.password)
-        if (!valid) return null
+        await connectDB();
+        const user = await User.findOne({ email }).select('+password');
+        if (!user) {
+          await logSecurityEvent({
+            type: 'failed_admin_login',
+            ipHash,
+            metadata: { reason: 'unknown_email', email },
+          });
+          return null;
+        }
+
+        const valid = await bcrypt.compare(password, user.password);
+        if (!valid) {
+          await logSecurityEvent({
+            type: 'failed_admin_login',
+            ipHash,
+            metadata: { reason: 'invalid_password', email },
+          });
+          return null;
+        }
 
         return {
           id: user._id.toString(),
           email: user.email,
           name: user.username,
-          role: user.role
-        }
+          role: user.role,
+        };
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id
-        token.name = user.name
-        token.role = user.role
+        token.id = user.id;
+        token.name = user.name;
+        token.role = user.role;
       }
-      return token
+      return token;
     },
     async session({ session, token }) {
       if (token) {
-        session.user.id = token.id
-        session.user.name = token.name 
-        session.user.role = token.role 
+        session.user.id = token.id;
+        session.user.name = token.name;
+        session.user.role = token.role;
       }
-      return session
+      return session;
     },
   },
   session: { strategy: 'jwt' },
@@ -53,4 +80,4 @@ export const authOptions = {
     signIn: '/control-center/login',
   },
   secret: process.env.AUTH_SECRET,
-}
+};

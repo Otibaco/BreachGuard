@@ -78,6 +78,28 @@ export async function checkBreach({ rawEmail, ipHash }) {
     try {
       normalizedResult = await checkEmailAgainstBreachApi(email);
     } catch (err) {
+      const providerUrl = process.env.BREACH_API_URL || "not_configured";
+
+      if (err instanceof BreachApiError && err.code === "BREACH_API_INVALID_URL") {
+        await logSecurityEvent({
+          type: "invalid_breach_request",
+          ipHash,
+          metadata: {
+            reason: "invalid_provider_url",
+            provider: providerUrl,
+          },
+        });
+      } else {
+        await logSecurityEvent({
+          type: "breach_api_error",
+          ipHash,
+          metadata: {
+            reason: err instanceof Error ? err.message : "unknown_provider_error",
+            provider: providerUrl,
+          },
+        });
+      }
+
       if (err instanceof BreachApiError) {
         throw err;
       }

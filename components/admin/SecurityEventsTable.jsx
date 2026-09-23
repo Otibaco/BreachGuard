@@ -6,6 +6,7 @@ const EVENT_LABELS = {
   failed_admin_login: "Failed admin login",
   rate_limit_exceeded: "Rate limit exceeded",
   invalid_breach_request: "Invalid breach-check request",
+  breach_api_error: "Breach API error",
 };
 
 export default function SecurityEventsTable({ events, pagination }) {

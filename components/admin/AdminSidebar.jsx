@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
@@ -26,7 +26,21 @@ const navItems = [
   },
 ];
 
-function SidebarContent({ collapsed, onNavigate, adminEmail }) {
+const SECURITY_EVENTS_READ_KEY = "breachguard-security-events-last-read";
+
+function getLastReadSecurityEventCount() {
+  if (typeof window === "undefined") return 0;
+
+  try {
+    const raw = window.localStorage.getItem(SECURITY_EVENTS_READ_KEY);
+    const value = Number(raw ?? "0");
+    return Number.isFinite(value) ? value : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function SidebarContent({ collapsed, onNavigate, adminEmail, securityEventCount = 0, onSecurityEventsClick }) {
   const pathname = usePathname();
 
   return (
@@ -38,12 +52,21 @@ function SidebarContent({ collapsed, onNavigate, adminEmail }) {
               ? pathname === item.href
               : pathname.startsWith(item.href);
 
+          const isSecurityEventsItem = item.href === "/control-center/security-events";
+          const badgeCount = isSecurityEventsItem ? securityEventCount : 0;
+
           return (
             <Link
               key={item.href}
               href={item.href}
-              onClick={onNavigate}
-              className={`focus-ring flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
+              onClick={(event) => {
+                if (isSecurityEventsItem && typeof window !== "undefined") {
+                  window.localStorage.setItem(SECURITY_EVENTS_READ_KEY, String(securityEventCount));
+                  onSecurityEventsClick?.();
+                }
+                onNavigate?.(event);
+              }}
+              className={`focus-ring relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
                 active
                   ? "bg-brand-primary/15 text-brand-cyan"
                   : "text-text-muted hover:bg-white/5 hover:text-text-secondary"
@@ -51,7 +74,21 @@ function SidebarContent({ collapsed, onNavigate, adminEmail }) {
               title={collapsed ? item.label : undefined}
             >
               <item.icon size={18} className="shrink-0" />
-              {!collapsed && <span>{item.label}</span>}
+              {!collapsed && (
+                <span className="flex flex-1 items-center justify-between gap-3">
+                  <span>{item.label}</span>
+                  {isSecurityEventsItem && badgeCount > 0 && (
+                    <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 py-0.5 text-[10px] font-semibold text-white shadow-sm shadow-red-500/40">
+                      {badgeCount > 99 ? "99+" : badgeCount}
+                    </span>
+                  )}
+                </span>
+              )}
+              {collapsed && isSecurityEventsItem && badgeCount > 0 && (
+                <span className="absolute -right-1 -top-1 inline-flex min-w-4 items-center justify-center rounded-full bg-red-500 px-1 py-0.5 text-[9px] font-semibold text-white shadow-sm shadow-red-500/40">
+                  {badgeCount > 9 ? "9+" : badgeCount}
+                </span>
+              )}
             </Link>
           );
         })}
@@ -78,9 +115,50 @@ function SidebarContent({ collapsed, onNavigate, adminEmail }) {
   );
 }
 
-export default function AdminSidebar({ adminEmail }) {
+export default function AdminSidebar({ adminEmail, securityEventCount = 0 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [liveSecurityEventCount, setLiveSecurityEventCount] = useState(
+    Math.max(securityEventCount - getLastReadSecurityEventCount(), 0)
+  );
+
+  useEffect(() => {
+    let active = true;
+
+    const refreshCount = async () => {
+      try {
+        const response = await fetch("/api/security-events/count", { cache: "no-store" });
+        const payload = await response.json();
+        const total = Number(payload?.count ?? 0);
+        const lastRead = getLastReadSecurityEventCount();
+        const unread = Math.max(total - lastRead, 0);
+        if (active) {
+          setLiveSecurityEventCount(Number.isFinite(unread) ? unread : 0);
+        }
+      } catch {
+        if (active) setLiveSecurityEventCount(0);
+      }
+    };
+
+    refreshCount();
+    const interval = setInterval(refreshCount, 30000);
+
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
+    const lastRead = getLastReadSecurityEventCount();
+    setLiveSecurityEventCount(Math.max(securityEventCount - lastRead, 0));
+  }, [securityEventCount]);
+
+  const handleSecurityEventsClick = () => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(SECURITY_EVENTS_READ_KEY, String(securityEventCount));
+    setLiveSecurityEventCount(0);
+  };
 
   return (
     <>
@@ -125,7 +203,9 @@ export default function AdminSidebar({ adminEmail }) {
             <SidebarContent
               collapsed={false}
               adminEmail={adminEmail}
+              securityEventCount={liveSecurityEventCount}
               onNavigate={() => setMobileOpen(false)}
+              onSecurityEventsClick={handleSecurityEventsClick}
             />
           </div>
         </div>
@@ -154,7 +234,12 @@ export default function AdminSidebar({ adminEmail }) {
           </button>
         </div>
 
-        <SidebarContent collapsed={collapsed} adminEmail={adminEmail} />
+        <SidebarContent
+          collapsed={collapsed}
+          adminEmail={adminEmail}
+          securityEventCount={liveSecurityEventCount}
+          onSecurityEventsClick={handleSecurityEventsClick}
+        />
       </aside>
     </>
   );

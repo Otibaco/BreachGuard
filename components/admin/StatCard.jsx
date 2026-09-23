@@ -1,11 +1,11 @@
 export default function StatCard({ label, value, icon: Icon, accent = false }) {
   return (
-    <div className="rounded-2xl border border-border-subtle bg-bg-card p-5 transition-colors hover:border-border-hover">
-      <div className="flex items-center justify-between">
+    <div className="rounded-2xl border border-border-subtle bg-bg-card p-4 shadow-sm shadow-black/10 transition-all duration-200 hover:border-border-hover hover:-translate-y-0.5 sm:p-5">
+      <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-text-muted">{label}</p>
         {Icon && (
           <span
-            className={`flex h-8 w-8 items-center justify-center rounded-lg ${
+            className={`flex h-9 w-9 items-center justify-center rounded-xl ${
               accent ? "bg-critical-bg text-critical-light" : "bg-brand-primary/10 text-brand-cyan"
             }`}
           >
@@ -14,7 +14,7 @@ export default function StatCard({ label, value, icon: Icon, accent = false }) {
         )}
       </div>
       <p
-        className={`mt-3 font-heading text-3xl font-bold ${
+        className={`mt-4 font-heading text-2xl font-bold sm:text-3xl ${
           accent ? "text-critical-light" : "text-text-primary"
         }`}
       >
