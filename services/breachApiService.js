@@ -2,16 +2,8 @@
  * breachApiService.js
  *
  * Owns all communication with the external breach-data API. The API key
- * never leaves this file's requests - it is read from the server-only
- * environment variable BREACH_API_KEY and is never logged or returned
- * to the caller.
- *
- * The default implementation below targets the shape of the
- * Have I Been Pwned v3 "breachedaccount" endpoint, since that is the most
- * common breach-data API used for student projects. If you configure a
- * different provider, adjust `mapProviderResponseToInternalShape` to match
- * its actual response fields - do not invent fields that the provider does
- * not return.
+ * is not logged or returned to callers. XposedOrNot's public email check
+ * does not require a key, while older HIBP-style integrations do.
  */
 
 export class BreachApiError extends Error {
@@ -44,29 +36,119 @@ export class BreachApiNotConfiguredError extends BreachApiError {
 const REQUEST_TIMEOUT_MS = 8000;
 
 function isConfigured() {
-  return Boolean(process.env.BREACH_API_URL && process.env.BREACH_API_KEY);
+  return Boolean(process.env.BREACH_API_URL);
+}
+
+function isXposedOrNotUrl(url) {
+  if (!url) return false;
+  return /xposedornot\.com|api\.xposedornot\.com/i.test(url);
+}
+
+function isHibpUrl(url) {
+  if (!url) return false;
+  return /haveibeenpwned|hibp/i.test(url);
+}
+
+function buildProviderUrl(normalizedEmail) {
+  const baseUrl = (process.env.BREACH_API_URL || "").replace(/\/+$/, "");
+  if (!baseUrl) return "";
+
+  const emailParam = encodeURIComponent(normalizedEmail);
+
+  if (isHibpUrl(baseUrl)) {
+    return `${baseUrl}/breachedaccount/${emailParam}?truncateResponse=false`;
+  }
+
+  if (baseUrl.includes("/v1/check-email")) {
+    return `${baseUrl}/${emailParam}?details=true`;
+  }
+
+  if (baseUrl.includes("/v1")) {
+    return `${baseUrl}/check-email/${emailParam}?details=true`;
+  }
+
+  return `${baseUrl}/v1/check-email/${emailParam}?details=true`;
+}
+
+function getProviderHeaders() {
+  const headers = {
+    Accept: "application/json",
+    "user-agent": "BreachGuard-Student-Project",
+  };
+
+  if (process.env.BREACH_API_KEY && isHibpUrl(process.env.BREACH_API_URL)) {
+    headers["hibp-api-key"] = process.env.BREACH_API_KEY;
+  }
+
+  return headers;
+}
+
+function normalizeBreachesEntry(entry) {
+  if (Array.isArray(entry)) {
+    const [name, title] = entry;
+    return {
+      name: name || title || "Unknown source",
+      title: title || name || "Unknown source",
+      domain: "",
+      date: null,
+      description: "",
+      pwnCount: 0,
+      dataTypes: [],
+    };
+  }
+
+  if (typeof entry === "string") {
+    return {
+      name: entry,
+      title: entry,
+      domain: "",
+      date: null,
+      description: "",
+      pwnCount: 0,
+      dataTypes: [],
+    };
+  }
+
+  if (entry && typeof entry === "object") {
+    const title =
+      entry.Title ||
+      entry.title ||
+      entry.Name ||
+      entry.name ||
+      entry.breach ||
+      entry.breachName ||
+      "Unknown source";
+
+    return {
+      name: entry.Name || entry.name || entry.breach || title,
+      title,
+      domain: entry.Domain || entry.domain || "",
+      date: entry.BreachDate || entry.breachDate || entry.date || null,
+      description: entry.Description || entry.description || "",
+      pwnCount: entry.PwnCount || entry.pwnCount || entry.exposedRecords || entry.exposed_records || 0,
+      dataTypes: entry.DataClasses || entry.dataClasses || entry.dataTypes || [],
+    };
+  }
+
+  return null;
 }
 
 /**
  * Maps a provider's raw breach list into BreachGuard's internal, stable
- * shape. Adjust the field mapping here if your provider's response differs -
- * never fabricate fields that aren't actually returned by the API.
+ * shape. This adapter handles both the legacy HIBP shape and the public
+ * XposedOrNot email response shape.
  */
-function mapProviderResponseToInternalShape(providerBreaches) {
-  if (!Array.isArray(providerBreaches)) return [];
+function mapProviderResponseToInternalShape(providerResponse) {
+  if (!providerResponse || typeof providerResponse !== "object") return [];
 
-  return providerBreaches.map((breach) => {
-    const title = breach.Title || breach.title || breach.Name || breach.name || "Unknown source";
-    return {
-      name: breach.Name || breach.name || title,
-      title,
-      domain: breach.Domain || breach.domain || "",
-      date: breach.BreachDate || breach.date || breach.breachDate || null,
-      description: breach.Description || breach.description || "",
-      pwnCount: breach.PwnCount || breach.pwnCount || 0,
-      dataTypes: breach.DataClasses || breach.dataTypes || breach.dataClasses || [],
-    };
-  });
+  const rawBreaches =
+    Array.isArray(providerResponse) ? providerResponse : providerResponse.breaches || providerResponse.Breaches || [];
+
+  if (!Array.isArray(rawBreaches)) return [];
+
+  return rawBreaches
+    .map((breach) => normalizeBreachesEntry(breach))
+    .filter(Boolean);
 }
 
 /**
@@ -74,34 +156,29 @@ function mapProviderResponseToInternalShape(providerBreaches) {
  * email address and returns BreachGuard's internal normalized shape:
  *
  *   { found: boolean, breachCount: number, breaches: Array }
- *
- * Throws BreachApiError (or a subclass) on any failure. Callers should
- * catch these and translate them into sanitized client-facing responses -
- * never forward the raw error to the browser.
  */
 export async function checkEmailAgainstBreachApi(normalizedEmail) {
   if (!isConfigured()) {
     throw new BreachApiNotConfiguredError();
   }
 
-  const url = `${process.env.BREACH_API_URL.replace(/\/$/, "")}/breachedaccount/${encodeURIComponent(
-    normalizedEmail
-  )}?truncateResponse=false`;
+  const providerUrl = buildProviderUrl(normalizedEmail);
+  const providerHeaders = getProviderHeaders();
+
+  if (isHibpUrl(process.env.BREACH_API_URL) && !process.env.BREACH_API_KEY) {
+    throw new BreachApiNotConfiguredError();
+  }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
-    const response = await fetch(url, {
+    const response = await fetch(providerUrl, {
       method: "GET",
-      headers: {
-        "hibp-api-key": process.env.BREACH_API_KEY,
-        "user-agent": "BreachGuard-Student-Project",
-      },
+      headers: providerHeaders,
       signal: controller.signal,
     });
 
-    // The provider returns 404 when the email was not found in any breach.
     if (response.status === 404) {
       return { found: false, breachCount: 0, breaches: [] };
     }
@@ -120,8 +197,12 @@ export async function checkEmailAgainstBreachApi(normalizedEmail) {
       });
     }
 
-    const rawBreaches = await response.json();
-    const breaches = mapProviderResponseToInternalShape(rawBreaches);
+    const raw = await response.json();
+    if (raw && typeof raw === "object" && raw.Error === "Not found") {
+      return { found: false, breachCount: 0, breaches: [] };
+    }
+
+    const breaches = mapProviderResponseToInternalShape(raw);
 
     return {
       found: breaches.length > 0,

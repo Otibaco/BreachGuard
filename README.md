@@ -178,18 +178,21 @@ created automatically the first time the app writes to them (an
 
 ## Breach API Setup
 
-`services/breachApiService.js` is written against the shape of the
-[Have I Been Pwned v3 API](https://haveibeenpwned.com/API/v3), a common,
-well-documented choice for a project like this, which requires a paid
-subscription key. Set `BREACH_API_URL` (e.g.
-`https://haveibeenpwned.com/api/v3`) and `BREACH_API_KEY`.
+This project is written to work with the public XposedOrNot email-breach
+endpoint: `https://api.xposedornot.com/v1/check-email/{email}`. Unlike the
+older HIBP flow, this endpoint is publicly accessible for the normal email
+check and does not require an API key.
 
-If you use a different provider, update
-`mapProviderResponseToInternalShape` in that file to match its actual
-response fields - don't invent fields it doesn't return.
+Set `BREACH_API_URL` to the base provider URL, for example
+`https://api.xposedornot.com`, and leave `BREACH_API_KEY` empty unless you
+are intentionally wiring a different provider such as a legacy HIBP-style
+API.
 
-If credentials aren't configured, the homepage shows a clear "provider
-hasn't been configured" message instead of faking a result.
+The adapter in `services/breachApiService.js` accepts both XposedOrNot and
+legacy HIBP-style responses, normalizes them into the app's internal shape,
+and keeps the rest of the app unchanged. If a provider is not configured,
+the homepage shows a clear "provider hasn't been configured" message instead
+of faking a result.
 
 ## Admin Setup
 
