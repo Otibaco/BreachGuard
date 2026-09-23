@@ -4,25 +4,28 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
-import { ShieldCheck, Loader2, Lock } from "lucide-react";
+import { ShieldCheck, Loader2, Lock, Eye, EyeOff } from "lucide-react";
 
 export default function LoginForm() {
   const router = useRouter();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
     setIsSubmitting(true);
 
+    const normalizedEmail = form.email.trim().toLowerCase();
+
     // 🔐 NextAuth login
-    const res = await signIn("credentials", {
+     const res = await signIn("credentials", {
       email: form.email,
       password: form.password,
       redirect: false,
-    });
+    })
 
     if (res?.error) {
       setError("Invalid email or password.");
@@ -79,15 +82,25 @@ export default function LoginForm() {
             >
               Password
             </label>
-            <input
-              id="admin-password"
-              type="password"
-              autoComplete="current-password"
-              required
-              value={form.password}
-              onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-              className="focus-ring w-full rounded-lg border border-border-medium bg-bg-input px-3 py-2.5 text-sm text-text-primary placeholder-text-dim"
-            />
+            <div className="relative">
+              <input
+                id="admin-password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                required
+                value={form.password}
+                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                className="focus-ring w-full rounded-lg border border-border-medium bg-bg-input px-3 py-2.5 pr-10 text-sm text-text-primary placeholder-text-dim"
+              />
+              <button
+                type="button"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                onClick={() => setShowPassword((value) => !value)}
+                className="absolute inset-y-0 right-3 flex items-center text-text-muted transition-colors hover:text-text-primary"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
           </div>
 
           {error && (

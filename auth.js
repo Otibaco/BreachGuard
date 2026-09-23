@@ -1,62 +1,56 @@
-// auth.js  (project root)
-import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
-import { connectDB } from "@/lib/connectDB";
-import { User } from "@/models/User";
+import Credentials from 'next-auth/providers/credentials'
+import bcrypt from 'bcryptjs'
+import { connectDB } from '@/lib/connectDB'
+import { User } from "./models/User";
 
-export const authOptions = {
+export const authOptions = {  
   providers: [
     Credentials({
-      name: "Credentials",
+      name: 'Credentials',
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        if (!credentials?.email || !credentials?.password) return null
 
-        await connectDB();
-        const user = await User.findOne({ email: credentials.email }).select(
-          "+password"
-        );
-        if (!user) return null;
+        await connectDB()
+        const user = await User.findOne({ email: credentials.email }).select('+password')
+        if (!user) return null
 
-        const valid = await bcrypt.compare(credentials.password, user.password);
-        if (!valid) return null;
+        const valid = await bcrypt.compare(credentials.password, user.password)
+        if (!valid) return null
 
         return {
           id: user._id.toString(),
           email: user.email,
           name: user.username,
-          role: user.role,
-        };
+          role: user.role
+        }
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.name = user.name;
-        token.role = user.role;
+        token.id = user.id
+        token.name = user.name
+        token.role = user.role
       }
-      return token;
+      return token
     },
     async session({ session, token }) {
       if (token) {
-        session.user.id = token.id;
-        session.user.name = token.name;
-        session.user.role = token.role;
+        session.user.id = token.id
+        session.user.name = token.name 
+        session.user.role = token.role 
       }
-      return session;
+      return session
     },
   },
-  session: { strategy: "jwt" },
+  session: { strategy: 'jwt' },
   pages: {
-    signIn: "/control-center/login",
+    signIn: '/control-center/login',
   },
-  // NextAuth v4 reads this as the JWT signing secret. middleware.js verifies
-  // the same cookie via next-auth/jwt's getToken(), so both must read from
-  // this exact env var - see .env.example.
   secret: process.env.AUTH_SECRET,
-};
+}
