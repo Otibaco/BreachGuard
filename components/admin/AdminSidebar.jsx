@@ -66,11 +66,10 @@ function SidebarContent({ collapsed, onNavigate, adminEmail, securityEventCount 
                 }
                 onNavigate?.(event);
               }}
-              className={`focus-ring relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${
-                active
+              className={`focus-ring relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors ${active
                   ? "bg-brand-primary/15 text-brand-cyan"
                   : "text-text-muted hover:bg-white/5 hover:text-text-secondary"
-              }`}
+                }`}
               title={collapsed ? item.label : undefined}
             >
               <item.icon size={18} className="shrink-0" />
@@ -187,6 +186,10 @@ export default function AdminSidebar({ adminEmail, securityEventCount = 0 }) {
           />
           <div className="relative flex h-full w-72 flex-col border-r border-border-subtle bg-bg-surface">
             <div className="flex items-center justify-between px-4 py-4">
+              <span className="inline-flex items-center justify-center rounded-md border border-border-subtle bg-bg-card p-2 text-brand-cyan shadow-sm shadow-black/10">
+                <ShieldCheck size={18} />
+              </span>
+
               <button
                 type="button"
                 onClick={() => setMobileOpen(false)}
@@ -195,10 +198,6 @@ export default function AdminSidebar({ adminEmail, securityEventCount = 0 }) {
               >
                 <X size={18} />
               </button>
-
-              <span className="inline-flex items-center justify-center rounded-md border border-border-subtle bg-bg-card p-2 text-brand-cyan shadow-sm shadow-black/10">
-                <ShieldCheck size={18} />
-              </span>
             </div>
             <SidebarContent
               collapsed={false}
@@ -213,9 +212,8 @@ export default function AdminSidebar({ adminEmail, securityEventCount = 0 }) {
 
       {/* Desktop sidebar */}
       <aside
-        className={`hidden lg:flex sticky top-0 h-screen shrink-0 flex-col border-r border-border-subtle bg-bg-surface transition-[width] duration-200 ${
-          collapsed ? "w-[68px]" : "w-64"
-        }`}
+        className={`hidden lg:flex sticky top-0 h-screen shrink-0 flex-col border-r border-border-subtle bg-bg-surface transition-[width] duration-200 ${collapsed ? "w-[68px]" : "w-64"
+          }`}
       >
         <div className="flex items-center justify-between px-4 py-5">
           {!collapsed && (
