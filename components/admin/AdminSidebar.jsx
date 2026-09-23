@@ -163,19 +163,19 @@ export default function AdminSidebar({ adminEmail, securityEventCount = 0 }) {
   return (
     <>
       {/* Mobile top bar */}
-      <div className="lg:hidden sticky top-0 z-30 flex items-center justify-between border-b border-border-subtle bg-bg-surface px-4 py-3">
-        <span className="inline-flex items-center gap-2 font-heading text-sm font-bold text-text-primary">
-          <ShieldCheck size={18} className="text-brand-cyan" />
-          Control Center
-        </span>
+      <div className="lg:hidden sticky top-0 z-40 flex w-full items-center justify-between border-b border-border-subtle bg-bg-surface/95 px-4 py-3 backdrop-blur-sm">
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
-          className="rounded-md p-2 text-text-muted hover:bg-white/5"
+          className="inline-flex items-center justify-center rounded-md p-2 text-text-muted transition-colors hover:bg-white/5 hover:text-text-secondary"
           aria-label="Open menu"
         >
           <Menu size={20} />
         </button>
+
+        <span className="inline-flex items-center justify-center rounded-md border border-border-subtle bg-bg-card p-2 text-brand-cyan shadow-sm shadow-black/10">
+          <ShieldCheck size={18} />
+        </span>
       </div>
 
       {/* Mobile drawer */}
@@ -185,20 +185,20 @@ export default function AdminSidebar({ adminEmail, securityEventCount = 0 }) {
             className="absolute inset-0 bg-black/60"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="relative flex h-full w-64 flex-col border-r border-border-subtle bg-bg-surface">
+          <div className="relative flex h-full w-72 flex-col border-r border-border-subtle bg-bg-surface">
             <div className="flex items-center justify-between px-4 py-4">
-              <span className="inline-flex items-center gap-2 font-heading text-sm font-bold text-text-primary">
-                <ShieldCheck size={18} className="text-brand-cyan" />
-                Control Center
-              </span>
               <button
                 type="button"
                 onClick={() => setMobileOpen(false)}
-                className="rounded-md p-1.5 text-text-muted hover:bg-white/5"
+                className="inline-flex items-center justify-center rounded-md p-1.5 text-text-muted transition-colors hover:bg-white/5 hover:text-text-secondary"
                 aria-label="Close menu"
               >
                 <X size={18} />
               </button>
+
+              <span className="inline-flex items-center justify-center rounded-md border border-border-subtle bg-bg-card p-2 text-brand-cyan shadow-sm shadow-black/10">
+                <ShieldCheck size={18} />
+              </span>
             </div>
             <SidebarContent
               collapsed={false}
