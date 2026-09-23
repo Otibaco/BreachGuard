@@ -7,15 +7,25 @@ import BreachCheck from "@/models/BreachCheck";
  * Aggregate dashboard numbers, computed live from MongoDB - never hardcoded.
  */
 export async function getStatistics() {
-  await connectToDatabase();
+  try {
+    await connectToDatabase();
 
-  const [totals, riskDistribution, checksOverTime] = await Promise.all([
-    getTotals(),
-    getRiskDistribution(),
-    getChecksOverTime(),
-  ]);
+    const [totals, riskDistribution, checksOverTime] = await Promise.all([
+      getTotals(),
+      getRiskDistribution(),
+      getChecksOverTime(),
+    ]);
 
-  return { totals, riskDistribution, checksOverTime };
+    return { totals, riskDistribution, checksOverTime };
+  } catch (error) {
+    console.error("Dashboard statistics unavailable because MongoDB is unreachable:", error?.message || error);
+
+    return {
+      totals: { totalChecks: 0, breached: 0, clean: 0, highRisk: 0 },
+      riskDistribution: { LOW: 0, MEDIUM: 0, HIGH: 0, CRITICAL: 0 },
+      checksOverTime: [],
+    };
+  }
 }
 
 async function getTotals() {
@@ -77,30 +87,43 @@ async function getChecksOverTime() {
  * because none are stored. Pass `status: "breached" | "clean"` to filter.
  */
 export async function getChecks({ page = 1, limit = 20, status } = {}) {
-  await connectToDatabase();
+  try {
+    await connectToDatabase();
 
-  const safePage = Math.max(1, Number(page) || 1);
-  const safeLimit = Math.min(100, Math.max(1, Number(limit) || 20));
-  const skip = (safePage - 1) * safeLimit;
+    const safePage = Math.max(1, Number(page) || 1);
+    const safeLimit = Math.min(100, Math.max(1, Number(limit) || 20));
+    const skip = (safePage - 1) * safeLimit;
 
-  const filter = status === "breached" || status === "clean" ? { status } : {};
+    const filter = status === "breached" || status === "clean" ? { status } : {};
 
-  const [checks, total] = await Promise.all([
-    BreachCheck.find(filter)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(safeLimit)
-      .lean(),
-    BreachCheck.countDocuments(filter),
-  ]);
+    const [checks, total] = await Promise.all([
+      BreachCheck.find(filter)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(safeLimit)
+        .lean(),
+      BreachCheck.countDocuments(filter),
+    ]);
 
-  return {
-    checks,
-    pagination: {
-      page: safePage,
-      limit: safeLimit,
-      total,
-      totalPages: Math.max(1, Math.ceil(total / safeLimit)),
-    },
-  };
+    return {
+      checks,
+      pagination: {
+        page: safePage,
+        limit: safeLimit,
+        total,
+        totalPages: Math.max(1, Math.ceil(total / safeLimit)),
+      },
+    };
+  } catch (error) {
+    console.error("Checks query unavailable because MongoDB is unreachable:", error?.message || error);
+    return {
+      checks: [],
+      pagination: {
+        page: 1,
+        limit: Math.min(100, Math.max(1, Number(limit) || 20)),
+        total: 0,
+        totalPages: 1,
+      },
+    };
+  }
 }
