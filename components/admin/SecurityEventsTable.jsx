@@ -18,13 +18,13 @@ export default function SecurityEventsTable({ events, pagination }) {
         actions={<RefreshButton />}
       />
 
-      <div className="overflow-x-auto rounded-2xl border border-border-subtle bg-bg-card">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-border-subtle bg-bg-surface text-text-dim">
+      <div className="max-h-[420px] overflow-auto rounded-2xl border border-border-subtle bg-bg-card">
+        <table className="min-w-[560px] w-full text-left text-sm">
+          <thead className="sticky top-0 z-10 border-b border-border-subtle bg-bg-surface text-text-dim">
             <tr>
-              <th className="px-4 py-3 font-medium">Event</th>
-              <th className="px-4 py-3 font-medium">Timestamp</th>
-              <th className="px-4 py-3 font-medium">Hashed IP</th>
+              <th className="px-4 py-3 font-medium whitespace-nowrap">Event</th>
+              <th className="px-4 py-3 font-medium whitespace-nowrap">Timestamp</th>
+              <th className="px-4 py-3 font-medium whitespace-nowrap">Hashed IP</th>
             </tr>
           </thead>
           <tbody>
@@ -37,13 +37,13 @@ export default function SecurityEventsTable({ events, pagination }) {
             )}
             {events.map((event) => (
               <tr key={event._id.toString()} className="border-b border-border-subtle last:border-0">
-                <td className="px-4 py-3 font-medium text-text-primary">
+                <td className="px-4 py-3 font-medium text-text-primary whitespace-nowrap">
                   {EVENT_LABELS[event.type] || event.type}
                 </td>
-                <td className="px-4 py-3 text-text-muted">
+                <td className="px-4 py-3 text-text-muted whitespace-nowrap">
                   {new Date(event.createdAt).toLocaleString()}
                 </td>
-                <td className="px-4 py-3 font-mono text-xs text-text-dim">
+                <td className="px-4 py-3 font-mono text-xs text-text-dim whitespace-nowrap">
                   {event.ipHash?.slice(0, 16)}…
                 </td>
               </tr>

@@ -57,14 +57,14 @@ export default function ChecksTable({ checks, pagination, currentStatus, counts 
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-border-subtle bg-bg-card">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b border-border-subtle bg-bg-surface text-text-dim">
+      <div className="max-h-[420px] overflow-auto rounded-2xl border border-border-subtle bg-bg-card">
+        <table className="min-w-[640px] w-full text-left text-sm">
+          <thead className="sticky top-0 z-10 border-b border-border-subtle bg-bg-surface text-text-dim">
             <tr>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium">Risk Level</th>
-              <th className="px-4 py-3 font-medium">Breach Count</th>
-              <th className="px-4 py-3 font-medium">Timestamp</th>
+              <th className="px-4 py-3 font-medium whitespace-nowrap">Status</th>
+              <th className="px-4 py-3 font-medium whitespace-nowrap">Risk Level</th>
+              <th className="px-4 py-3 font-medium whitespace-nowrap">Breach Count</th>
+              <th className="px-4 py-3 font-medium whitespace-nowrap">Timestamp</th>
             </tr>
           </thead>
           <tbody>
@@ -77,14 +77,14 @@ export default function ChecksTable({ checks, pagination, currentStatus, counts 
             )}
             {checks.map((check) => (
               <tr key={check._id.toString()} className="border-b border-border-subtle last:border-0">
-                <td className={`px-4 py-3 font-semibold font-mono text-xs uppercase ${STATUS_STYLES[check.status]}`}>
+                <td className={`px-4 py-3 font-semibold font-mono text-xs uppercase whitespace-nowrap ${STATUS_STYLES[check.status]}`}>
                   {check.status}
                 </td>
-                <td className={`px-4 py-3 font-medium ${RISK_STYLES[check.riskLevel]}`}>
+                <td className={`px-4 py-3 font-medium whitespace-nowrap ${RISK_STYLES[check.riskLevel]}`}>
                   {check.riskLevel}
                 </td>
-                <td className="px-4 py-3 text-text-muted">{check.breachCount}</td>
-                <td className="px-4 py-3 text-text-muted">
+                <td className="px-4 py-3 text-text-muted whitespace-nowrap">{check.breachCount}</td>
+                <td className="px-4 py-3 text-text-muted whitespace-nowrap">
                   {new Date(check.createdAt).toLocaleString()}
                 </td>
               </tr>
