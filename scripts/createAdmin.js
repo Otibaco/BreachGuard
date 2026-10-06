@@ -30,8 +30,8 @@ async function seed() {
 
     console.log('✅ Connected to MongoDB')
 
-    const email = 'admin@breachguard.com'
-    const password = 'Admin1234!' // Change after first login
+    const email = 'obumnemennaemeka094@gmail.com'
+    const password = 'champion1234' // Change after first login
     const hashed = await bcrypt.hash(password, 12)
 
     await User.findOneAndUpdate(
