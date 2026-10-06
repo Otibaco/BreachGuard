@@ -200,7 +200,7 @@ There is no public registration page. Create the first administrator with
 the seed script:
 
 ```bash
-npm run create-admin -- --email admin@example.com --username admin --password "a-strong-password"
+pnpm run create-admin -- --email admin@example.com --username admin --password "a-strong-password"
 ```
 
 Omit `--password` to be prompted for it interactively. Running the script

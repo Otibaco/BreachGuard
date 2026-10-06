@@ -18,7 +18,7 @@ export default function Footer() {
           </span>
         </div>
 
-        <div className="flex items-center gap-5 text-text-subtle font-mono text-[11px]">
+        <div className="hidden flex items-center gap-5 text-text-subtle font-mono text-[11px]">
           <span>&copy; {new Date().getFullYear()} BreachGuard</span>
           <Link href="/control-center/login" className="text-text-muted hover:text-brand-cyan transition-colors">
             Admin Login
